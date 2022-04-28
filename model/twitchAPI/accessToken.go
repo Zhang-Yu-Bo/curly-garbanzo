@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var appAccessToken = os.Getenv("APP_ACCESS_TOKEN")
+
 func GetAppAccessToken() string {
 	if checkTokenValid(appAccessToken) {
 		return appAccessToken

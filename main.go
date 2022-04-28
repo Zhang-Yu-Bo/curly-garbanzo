@@ -8,7 +8,14 @@ import (
 	"time"
 
 	"github.com/Zhang-Yu-Bo/curly-garbanzo/router"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Println(err.Error())
+	}
+}
 
 func main() {
 	mPort := os.Getenv("PORT")
