@@ -58,5 +58,5 @@ func init() {
 }
 
 func GetMessageSecret() string {
-	return messageSecret
+	return os.Getenv("MESSAGE_SECRET")
 }
