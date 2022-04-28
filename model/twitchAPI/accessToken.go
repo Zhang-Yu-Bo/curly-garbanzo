@@ -3,6 +3,7 @@ package twitchAPI
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ func GetAppAccessToken() string {
 		return appAccessToken
 	}
 	if err := updateToken(); err != nil {
+		fmt.Printf("updateToken failed: token = %s, reason = %s\n", appAccessToken, err)
 		return ""
 	}
 	os.Setenv("APP_ACCESS_TOKEN", appAccessToken)
@@ -28,10 +30,11 @@ func checkTokenValid(token string) bool {
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		return false
 	}
-	req.Header.Add("Authorization", "OAuth "+appAccessToken)
+	req.Header.Add("Authorization", "OAuth "+token)
 
 	var res *http.Response
 	if res, err = client.Do(req); err != nil {
+		fmt.Printf("checkTokenValid: token = %s, reason = %s\n", token, err)
 		return false
 	}
 	if res.StatusCode == http.StatusOK {
