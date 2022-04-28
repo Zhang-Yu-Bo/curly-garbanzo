@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -44,9 +45,9 @@ const templateMessage = `
 }`
 
 func SendMessage(msg MessageOption) error {
-	url := discordWebhook
+	url := os.Getenv("DISCORD_WEBHOOK")
 
-	fmt.Println("discord webhook", discordWebhook)
+	fmt.Println("discord webhook", url)
 
 	var err error
 	var bufMsg bytes.Buffer

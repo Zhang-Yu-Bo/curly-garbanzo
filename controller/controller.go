@@ -117,7 +117,7 @@ func TestPage(w http.ResponseWriter, r *http.Request) {
 		EmbedThumbnailURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/6709d95f-3cbc-4f2b-920f-3b408be0dc96-profile_image-70x70.png",
 	})
 	if err != nil {
-		fmt.Fprintln(w, err)
+		fmt.Fprintf(w, "nonono: %s\n", err)
 		return
 	}
 	fmt.Fprint(w, "Hello World")
