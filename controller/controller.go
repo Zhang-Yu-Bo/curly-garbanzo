@@ -58,6 +58,10 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 	if hmac != r.Header.Get(twitchAPI.TWITCH_MESSAGE_SIGNATURE) {
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintln(w, "validation failed, hmac is not equal to TWITCH_MESSAGE_SIGNATURE")
+		fmt.Println("secret =", secret)
+		fmt.Println("message =", message)
+		fmt.Println("hmac =", hmac)
+		fmt.Println("1234 =", r.Header.Get(twitchAPI.TWITCH_MESSAGE_SIGNATURE))
 		fmt.Println("validation failed, hmac is not equal to TWITCH_MESSAGE_SIGNATURE")
 		return
 	}
