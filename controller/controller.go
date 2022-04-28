@@ -108,7 +108,7 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
 	err := discordAPI.SendMessage(discordAPI.MessageOption{
-		TagEveryone:       false,
+		TagEveryone:       true,
 		Content:           "test",
 		EmbedEnable:       true,
 		EmbedTitle:        "this is title",

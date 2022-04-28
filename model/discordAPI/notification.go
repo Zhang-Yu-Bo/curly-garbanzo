@@ -3,6 +3,7 @@ package discordAPI
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -44,6 +45,8 @@ const templateMessage = `
 
 func SendMessage(msg MessageOption) error {
 	url := discordWebhook
+
+	fmt.Println("discord webhook", discordWebhook)
 
 	var err error
 	var bufMsg bytes.Buffer
