@@ -3,6 +3,7 @@ package twitchAPI
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -39,17 +40,19 @@ type UserInfoList struct {
 func GetUserInfoByName(loginAccount string) (UserInfo, error) {
 	var err error
 	var req *http.Request
-	client := &http.Client{}
-	url := "https://api.twitch.tv/helix/users?login=" + loginAccount
 
+	url := "https://api.twitch.tv/helix/users?login=" + loginAccount
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		return UserInfo{}, err
 	}
 
+	fmt.Println("token", GetAppAccessToken())
+	fmt.Println("client id", os.Getenv("TWITCH_CLIENT_ID"))
 	req.Header.Add("Authorization", "Bearer "+GetAppAccessToken())
 	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
 
 	var res *http.Response
+	client := &http.Client{}
 	if res, err = client.Do(req); err != nil {
 		return UserInfo{}, err
 	}
