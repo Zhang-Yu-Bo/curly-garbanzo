@@ -19,19 +19,35 @@ func GetAppAccessToken() string {
 	return appAccessToken
 }
 
-// TODO: 換驗證方法 rel:https://dev.twitch.tv/docs/authentication/validate-tokens
 func checkTokenValid(token string) bool {
-	if _, err := GetUserInfoByName(os.Getenv("TWITCH_ACCOUNT"), appAccessToken); err != nil {
+	url := "https://id.twitch.tv/oauth2/validate"
+
+	var err error
+	var req *http.Request
+	client := &http.Client{}
+	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		return false
 	}
-	return true
+	req.Header.Add("Authorization", "OAuth "+appAccessToken)
+
+	var res *http.Response
+	if res, err = client.Do(req); err != nil {
+		return false
+	}
+	if res.StatusCode == http.StatusOK {
+		return true
+	}
+	if res.StatusCode == http.StatusUnauthorized {
+		return false
+	}
+	return false
 }
 
 func updateToken() error {
 	url := "https://id.twitch.tv/oauth2/token"
 
-	payload := strings.NewReader("client_id=" + clientID +
-		"&client_secret=" + clientSecret +
+	payload := strings.NewReader("client_id=" + os.Getenv("TWITCH_CLIENT_ID") +
+		"&client_secret=" + os.Getenv("TWITCH_CLIENT_SECRET") +
 		"&grant_type=client_credentials",
 	)
 

@@ -7,12 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var (
-	clientID       string
-	clientSecret   string
-	appAccessToken string
-	messageSecret  string
-)
+var appAccessToken string
 
 const (
 	TWITCH_MESSAGE_ID        = "twitch-eventsub-message-id"
@@ -34,26 +29,11 @@ func init() {
 		return
 	}
 
-	clientID = os.Getenv("TWITCH_CLIENT_ID")
-	if clientID == "" {
-		fmt.Println("client ID is empty.")
-	}
-
-	clientSecret = os.Getenv("TWITCH_CLIENT_SECRET")
-	if clientSecret == "" {
-		fmt.Println("client secret is empty.")
-	}
-
 	appAccessToken = os.Getenv("APP_ACCESS_TOKEN")
 	if appAccessToken == "" {
 		if err := updateToken(); err != nil {
 			fmt.Println(err.Error())
 		}
-	}
-
-	messageSecret = os.Getenv("MESSAGE_SECRET")
-	if messageSecret == "" {
-		fmt.Println("message secret is empty.")
 	}
 }
 

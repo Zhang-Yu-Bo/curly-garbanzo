@@ -21,7 +21,7 @@ func ShowUserInfo(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var userInfo twitchAPI.UserInfo
 
-	userInfo, err = twitchAPI.GetUserInfoByName(vars["username"], twitchAPI.GetAppAccessToken())
+	userInfo, err = twitchAPI.GetUserInfoByName(vars["username"])
 	if err != nil {
 		fmt.Fprintf(w, "%s\n", err.Error())
 		return
@@ -69,14 +69,29 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 	switch r.Header.Get(twitchAPI.MESSAGE_TYPE) {
 	case twitchAPI.MESSAGE_TYPE_NOTIFICATION:
 
+		var twitchAccount string
+		if twitchAccount, err = js.Get("event").Get("broadcaster_user_login").String(); err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			fmt.Println(err)
+			return
+		}
+
+		var userInfo twitchAPI.UserInfo
+		if userInfo, err = twitchAPI.GetUserInfoByName(twitchAccount); err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			fmt.Println(err)
+			return
+		}
+
+		userInfo.Validation()
 		err = discordAPI.SendMessage(discordAPI.MessageOption{
 			TagEveryone:       true,
-			Content:           "test",
+			Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 " + userInfo.DisplayName + " 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
 			EmbedEnable:       true,
-			EmbedTitle:        "this is title",
-			EmbedDes:          "this is description",
-			EmbedURL:          "https://www.twitch.tv/beryl_lulu",
-			EmbedThumbnailURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/6709d95f-3cbc-4f2b-920f-3b408be0dc96-profile_image-70x70.png",
+			EmbedTitle:        userInfo.DisplayName,
+			EmbedDes:          userInfo.Description,
+			EmbedURL:          "https://www.twitch.tv/" + twitchAccount,
+			EmbedThumbnailURL: userInfo.ProfileImageURL,
 		})
 
 		w.WriteHeader(http.StatusNoContent)
@@ -110,14 +125,16 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
+	info := twitchAPI.UserInfo{}
+	info.Validation()
 	err := discordAPI.SendMessage(discordAPI.MessageOption{
-		TagEveryone:       true,
-		Content:           "test",
+		TagEveryone:       false,
+		Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 **`" + info.DisplayName + "`** 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
 		EmbedEnable:       true,
-		EmbedTitle:        "this is title",
-		EmbedDes:          "this is description",
-		EmbedURL:          "https://www.twitch.tv/beryl_lulu",
-		EmbedThumbnailURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/6709d95f-3cbc-4f2b-920f-3b408be0dc96-profile_image-70x70.png",
+		EmbedTitle:        info.DisplayName,
+		EmbedDes:          info.Description,
+		EmbedURL:          "https://www.twitch.tv/" + info.Login,
+		EmbedThumbnailURL: info.ProfileImageURL,
 	})
 	if err != nil {
 		fmt.Fprintln(w, err)

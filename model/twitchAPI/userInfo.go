@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 )
 
 type UserInfo struct {
@@ -19,33 +20,39 @@ type UserInfo struct {
 	CreatedAt       string `json:"createed_at"`
 }
 
+func (u *UserInfo) Validation() {
+	if u.DisplayName == "" {
+		u.DisplayName = "none"
+	}
+	if u.Description == "" {
+		u.Description = "none"
+	}
+	if u.ProfileImageURL == "" {
+		u.ProfileImageURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/b5272bba-0dbf-4d53-af96-a969755f9366-profile_image-300x300.png"
+	}
+}
+
 type UserInfoList struct {
 	User []UserInfo `json:"data"`
 }
 
-func GetUserInfoByName(loginAccount, token string) (UserInfo, error) {
-	if token == "" {
-		token = appAccessToken
-	}
-
-	url := "https://api.twitch.tv/helix/users?login=" + loginAccount
-
+func GetUserInfoByName(loginAccount string) (UserInfo, error) {
 	var err error
 	var req *http.Request
 	client := &http.Client{}
+	url := "https://api.twitch.tv/helix/users?login=" + loginAccount
+
 	if req, err = http.NewRequest("GET", url, nil); err != nil {
 		return UserInfo{}, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+token)
-	req.Header.Add("Client-Id", clientID)
+	req.Header.Add("Authorization", "Bearer "+GetAppAccessToken())
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
 
 	var res *http.Response
 	if res, err = client.Do(req); err != nil {
 		return UserInfo{}, err
 	}
-
-	defer res.Body.Close()
 
 	if res.StatusCode == http.StatusBadRequest {
 		return UserInfo{}, errors.New("request was invalid")
@@ -58,8 +65,9 @@ func GetUserInfoByName(loginAccount, token string) (UserInfo, error) {
 	if err = json.NewDecoder(res.Body).Decode(&result); err != nil {
 		return UserInfo{}, err
 	}
+	defer res.Body.Close()
 
-	if len(result.User) > 0 {
+	if len(result.User) <= 0 {
 		return UserInfo{}, errors.New("there is no user data in response")
 	}
 
