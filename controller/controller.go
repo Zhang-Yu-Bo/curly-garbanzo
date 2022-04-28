@@ -69,7 +69,7 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 	switch r.Header.Get(twitchAPI.MESSAGE_TYPE) {
 	case twitchAPI.MESSAGE_TYPE_NOTIFICATION:
 
-		discordAPI.SendMessage(discordAPI.MessageOption{
+		err = discordAPI.SendMessage(discordAPI.MessageOption{
 			TagEveryone:       true,
 			Content:           "test",
 			EmbedEnable:       true,
@@ -80,6 +80,9 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 		})
 
 		w.WriteHeader(http.StatusNoContent)
+		if err != nil {
+			fmt.Println(err)
+		}
 		fmt.Println("NOTIFICATION", string(bodyBuf))
 		return
 	case twitchAPI.MESSAGE_TYPE_VERIFICATION:
@@ -117,7 +120,7 @@ func TestPage(w http.ResponseWriter, r *http.Request) {
 		EmbedThumbnailURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/6709d95f-3cbc-4f2b-920f-3b408be0dc96-profile_image-70x70.png",
 	})
 	if err != nil {
-		fmt.Fprintf(w, "nonono: %s\n", err)
+		fmt.Fprintln(w, err)
 		return
 	}
 	fmt.Fprint(w, "Hello World")
