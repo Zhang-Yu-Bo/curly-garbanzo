@@ -3,7 +3,10 @@ package controller
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/Zhang-Yu-Bo/curly-garbanzo/model/discordAPI"
 	"github.com/Zhang-Yu-Bo/curly-garbanzo/model/twitchAPI"
@@ -124,6 +127,7 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
+	os.Setenv("TEST", strconv.Itoa(rand.Int()))
 	info := twitchAPI.UserInfo{}
 	info.Validation()
 	err := discordAPI.SendMessage(discordAPI.MessageOption{

@@ -1,12 +1,12 @@
 package twitchAPI
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/bitly/go-simplejson"
 )
 
 var appAccessToken = os.Getenv("APP_ACCESS_TOKEN")
@@ -70,16 +70,16 @@ func updateToken() error {
 		return err
 	}
 
-	defer res.Body.Close()
-
-	result := map[string]string{}
-	if err = json.NewDecoder(res.Body).Decode(&result); err != nil {
+	var js *simplejson.Json
+	if js, err = simplejson.NewFromReader(res.Body); err != nil {
 		return err
 	}
+	defer res.Body.Close()
 
-	var exist bool
-	if appAccessToken, exist = result["access_token"]; !exist {
-		return errors.New("update access token failed, there is no access_token field in response json")
+	var tempToken string
+	if tempToken, err = js.Get("access_token").String(); err != nil {
+		return err
 	}
+	appAccessToken = tempToken
 	return nil
 }
