@@ -8,7 +8,6 @@ import (
 	"github.com/Zhang-Yu-Bo/curly-garbanzo/model/discordAPI"
 	"github.com/Zhang-Yu-Bo/curly-garbanzo/model/twitchAPI"
 	"github.com/bitly/go-simplejson"
-	"github.com/gorilla/mux"
 )
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
@@ -16,12 +15,16 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShowUserInfo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
 	var err error
 	var userInfo twitchAPI.UserInfo
 
-	userInfo, err = twitchAPI.GetUserInfoByName(vars["username"])
+	username := r.URL.Query().Get("user")
+	if username == "" {
+		fmt.Fprintln(w, "Hello World")
+		return
+	}
+
+	userInfo, err = twitchAPI.GetUserInfoByName(username)
 	if err != nil {
 		fmt.Fprintf(w, "%s\n", err.Error())
 		return
