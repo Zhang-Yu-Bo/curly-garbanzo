@@ -38,6 +38,7 @@ type UserInfoList struct {
 }
 
 func GetUserInfoByName(loginAccount string) (UserInfo, error) {
+	fmt.Printf("GetUserInfoByName: %s\n", loginAccount)
 	var err error
 	var req *http.Request
 

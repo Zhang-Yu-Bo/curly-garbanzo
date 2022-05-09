@@ -62,8 +62,8 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "validation failed, hmac is not equal to TWITCH_MESSAGE_SIGNATURE")
 		fmt.Println("secret =", secret)
 		fmt.Println("message =", message)
-		fmt.Println("hmac =", hmac)
-		fmt.Println("1234 =", r.Header.Get(twitchAPI.TWITCH_MESSAGE_SIGNATURE))
+		fmt.Println("mHMAC =", hmac)
+		fmt.Println("tHMAC =", r.Header.Get(twitchAPI.TWITCH_MESSAGE_SIGNATURE))
 		fmt.Println("validation failed, hmac is not equal to TWITCH_MESSAGE_SIGNATURE")
 		return
 	}
@@ -71,13 +71,29 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 	switch r.Header.Get(twitchAPI.MESSAGE_TYPE) {
 	case twitchAPI.MESSAGE_TYPE_NOTIFICATION:
 
+		// get login account from event sub
 		var twitchAccount string
 		if twitchAccount, err = js.Get("event").Get("broadcaster_user_login").String(); err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			fmt.Println(err)
 			return
 		}
+		// get user id from event sub
+		var twitchBroadcasterUserId string
+		if twitchBroadcasterUserId, err = js.Get("event").Get("broadcaster_user_id").String(); err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			fmt.Println(err)
+			return
+		}
 
+		// get channel infomation from twitch API
+		var channelInfo twitchAPI.ChannelInfo
+		if channelInfo, err = twitchAPI.GetChannelInfoById(twitchBroadcasterUserId); err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			fmt.Println(err)
+			return
+		}
+		// get user infomation from twitch API
 		var userInfo twitchAPI.UserInfo
 		if userInfo, err = twitchAPI.GetUserInfoByName(twitchAccount); err != nil {
 			w.WriteHeader(http.StatusNoContent)
@@ -87,11 +103,11 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 
 		userInfo.Validation()
 		err = discordAPI.SendMessage(discordAPI.MessageOption{
-			TagEveryone:       true,
+			TagEveryone:       false,
 			Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 " + userInfo.DisplayName + " 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
 			EmbedEnable:       true,
-			EmbedTitle:        userInfo.DisplayName,
-			EmbedDes:          userInfo.Description,
+			EmbedTitle:        userInfo.DisplayName + " - " + channelInfo.Title,
+			EmbedDes:          "Streaming: `" + channelInfo.GameName + "` \\n>>> " + userInfo.Description,
 			EmbedURL:          "https://www.twitch.tv/" + twitchAccount,
 			EmbedThumbnailURL: userInfo.ProfileImageURL,
 		})

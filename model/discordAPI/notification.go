@@ -3,6 +3,7 @@ package discordAPI
 import (
 	"bytes"
 	"errors"
+	"html"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -52,7 +53,8 @@ func SendMessage(msg MessageOption) error {
 	if err = templateMsg.Execute(&bufMsg, msg); err != nil {
 		return err
 	}
-	payload := strings.NewReader(bufMsg.String())
+	unescapeString := html.UnescapeString(bufMsg.String())
+	payload := strings.NewReader(unescapeString)
 
 	var req *http.Request
 	client := &http.Client{}
