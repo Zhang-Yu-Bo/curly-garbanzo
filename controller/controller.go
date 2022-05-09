@@ -86,16 +86,25 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// get channel infomation from twitch API
-		var channelInfo twitchAPI.ChannelInfo
-		if channelInfo, err = twitchAPI.GetChannelInfoById(twitchBroadcasterUserId); err != nil {
+		// 同步執行 get channel information from twitch API
+		chChannelInfo := make(chan twitchAPI.ChannelInfo)
+		chError := make(chan error)
+		go func() {
+			tempChannelInfo, tempError := twitchAPI.GetChannelInfoById(twitchBroadcasterUserId)
+			chChannelInfo <- tempChannelInfo
+			chError <- tempError
+		}()
+		// get user information from twitch API
+		var userInfo twitchAPI.UserInfo
+		if userInfo, err = twitchAPI.GetUserInfoByName(twitchAccount); err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			fmt.Println(err)
 			return
 		}
-		// get user infomation from twitch API
-		var userInfo twitchAPI.UserInfo
-		if userInfo, err = twitchAPI.GetUserInfoByName(twitchAccount); err != nil {
+		// 等待 channel info
+		channelInfo := <-chChannelInfo
+		err = <-chError
+		if err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			fmt.Println(err)
 			return
@@ -103,11 +112,11 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 
 		userInfo.Validation()
 		err = discordAPI.SendMessage(discordAPI.MessageOption{
-			TagEveryone:       false,
+			TagEveryone:       true,
 			Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 " + userInfo.DisplayName + " 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
 			EmbedEnable:       true,
 			EmbedTitle:        userInfo.DisplayName + " - " + channelInfo.Title,
-			EmbedDes:          "Streaming: `" + channelInfo.GameName + "` \\n>>> " + userInfo.Description,
+			EmbedDes:          "正在直播: `" + channelInfo.GameName + "` \\n>>> " + userInfo.Description,
 			EmbedURL:          "https://www.twitch.tv/" + twitchAccount,
 			EmbedThumbnailURL: userInfo.ProfileImageURL,
 		})
@@ -143,15 +152,23 @@ func EventSub(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
+	var err error
 	os.Setenv("TEST", strconv.Itoa(rand.Int()))
 	info := twitchAPI.UserInfo{}
 	info.Validation()
-	err := discordAPI.SendMessage(discordAPI.MessageOption{
+
+	var channelInfo twitchAPI.ChannelInfo
+	if channelInfo, err = twitchAPI.GetChannelInfoById("41001439"); err != nil {
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	err = discordAPI.SendMessage(discordAPI.MessageOption{
 		TagEveryone:       false,
-		Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 **`" + info.DisplayName + "`** 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
+		Content:           "** ﾚ(ﾟ∀ﾟ;)ﾍ 單兵注意 " + info.DisplayName + " 開直播囉 ﾍ( ﾟ∀ﾟ;)ﾉ **",
 		EmbedEnable:       true,
-		EmbedTitle:        info.DisplayName,
-		EmbedDes:          info.Description,
+		EmbedTitle:        info.DisplayName + " - " + channelInfo.Title,
+		EmbedDes:          "正在直播: `" + channelInfo.GameName + "` \\n>>> " + info.Description,
 		EmbedURL:          "https://www.twitch.tv/" + info.Login,
 		EmbedThumbnailURL: info.ProfileImageURL,
 	})
